@@ -44,7 +44,10 @@ func AddNewRoomType(storage storage.Storage) gin.HandlerFunc {
 
 		err = c.ShouldBindJSON(&newRoomTypeData)
 		if err != nil {
-			fmt.Printf("Error binding JSON %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
 		}
 
 		newRoomType, err = models.NewRoomType(newRoomTypeData, createdBy)
@@ -54,6 +57,7 @@ func AddNewRoomType(storage storage.Storage) gin.HandlerFunc {
 			})
 		}
 
+		// TODO: Check if RoomType with same name exists already or not
 		err = storage.AddNewRoomType(newRoomType)
 		if err != nil {
 			fmt.Printf("Error adding new room: %v", err)

@@ -19,9 +19,9 @@ type Room struct {
 
 // NewRoomData defines the json payload expected to create a new Room
 type NewRoomData struct {
-	RoomName     string `json:"roomName"`
-	RoomTypeID   string `json:"roomTypeID"`
-	RoomNickName string `json:"roomNickName"`
+	RoomName     string `json:"roomName"  binding:"required"`
+	RoomTypeID   string `json:"roomTypeID"  binding:"required"`
+	RoomNickName string `json:"roomNickName"  binding:"required"`
 }
 
 func isValidNewRoomData(data *NewRoomData) bool {
