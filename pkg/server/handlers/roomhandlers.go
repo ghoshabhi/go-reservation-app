@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"fmt"
-	"goreservationapp/pkg/storage"
-	"goreservationapp/pkg/storage/models"
 	"net/http"
 	"strconv"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
+
+	"goreservationapp/pkg/storage"
+	"goreservationapp/pkg/storage/models"
 )
 
 // GetAllRooms is a handler for the GET /rooms route
@@ -18,11 +19,39 @@ func GetAllRooms(storage storage.Storage) gin.HandlerFunc {
 
 		rooms, err = storage.GetAllRooms()
 		if err != nil {
-			fmt.Println("errored getting all rooms")
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"rooms": rooms,
 		})
+	}
+}
+
+// GetRoomByRoomID fetches a room by roomid
+func GetRoomByRoomID(storage storage.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var room *models.Room
+		var roomID string
+		var err error
+
+		if roomID = c.Param("roomid"); roomID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "roomid required",
+			})
+			return
+		}
+
+		if room, err = storage.GetRoomByRoomID(roomID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, room)
 	}
 }
 
@@ -34,16 +63,14 @@ func AddNewRoom(storage storage.Storage) gin.HandlerFunc {
 		var createdBy int
 		var err error
 
-		createdBy, err = strconv.Atoi(c.Request.Header.Get("created-by"))
-		if err != nil || createdBy == 0 {
+		if createdBy, err = strconv.Atoi(c.Request.Header.Get("created-by")); err != nil || createdBy == 0 {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "created-by missing",
 			})
 			return
 		}
 
-		err = c.ShouldBindJSON(&newRoomData)
-		if err != nil {
+		if err = c.ShouldBindJSON(&newRoomData); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
@@ -51,8 +78,7 @@ func AddNewRoom(storage storage.Storage) gin.HandlerFunc {
 		}
 		fmt.Printf("newRoomData: %+v\n", newRoomData)
 
-		newRoom, err = models.NewRoom(newRoomData, createdBy)
-		if err != nil {
+		if newRoom, err = models.NewRoom(newRoomData, createdBy); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
@@ -60,9 +86,11 @@ func AddNewRoom(storage storage.Storage) gin.HandlerFunc {
 		}
 
 		// TODO: Check if RoomType exists or not
-		err = storage.AddNewRoom(newRoom)
-		if err != nil {
-			fmt.Printf("Error adding new room: %v", err)
+		if err = storage.AddNewRoom(newRoom); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
 		}
 
 		c.Status(http.StatusNoContent)

@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"fmt"
-	"goreservationapp/pkg/storage"
-	"goreservationapp/pkg/storage/models"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
+	"goreservationapp/pkg/storage"
+	"goreservationapp/pkg/storage/models"
 )
 
 // GetAllRoomTypes is a handler for the GET /roomTypes route
@@ -16,9 +16,11 @@ func GetAllRoomTypes(storage storage.Storage) gin.HandlerFunc {
 		var roomTypes []*models.RoomType
 		var err error
 
-		roomTypes, err = storage.GetAllRoomTypes()
-		if err != nil {
-			fmt.Println("errored getting all roomTypes")
+		if roomTypes, err = storage.GetAllRoomTypes(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"roomTypes": roomTypes,
@@ -34,8 +36,7 @@ func AddNewRoomType(storage storage.Storage) gin.HandlerFunc {
 		var createdBy int
 		var err error
 
-		createdBy, err = strconv.Atoi(c.Request.Header.Get("created-by"))
-		if err != nil || createdBy == 0 {
+		if createdBy, err = strconv.Atoi(c.Request.Header.Get("created-by")); err != nil || createdBy == 0 {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "created-by missing",
 			})
@@ -50,17 +51,19 @@ func AddNewRoomType(storage storage.Storage) gin.HandlerFunc {
 			return
 		}
 
-		newRoomType, err = models.NewRoomType(newRoomTypeData, createdBy)
-		if err != nil {
+		if newRoomType, err = models.NewRoomType(newRoomTypeData, createdBy); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
+			return
 		}
 
 		// TODO: Check if RoomType with same name exists already or not
-		err = storage.AddNewRoomType(newRoomType)
-		if err != nil {
-			fmt.Printf("Error adding new room: %v", err)
+		if err = storage.AddNewRoomType(newRoomType); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
 		}
 
 		c.Status(http.StatusNoContent)

@@ -14,26 +14,30 @@ type Server interface {
 
 // server implements the Server interface
 type server struct {
-	storage storage.Storage
+	// storage storage.Storage
 	engine  *gin.Engine
+	// logger ?
+	// env variables?
 }
 
 // NewServer instantiates a new instance of server
 func NewServer() Server {
 	router := gin.Default()
+	storage := storage.NewStorage()
 
 	s := server{
-		storage: storage.NewStorage(),
+		// storage: storage.NewStorage(),
 		engine:  router,
 	}
 
 	apiMW := router.Group("/api")
 
-	apiMW.GET("/rooms", handlers.GetAllRooms(s.storage))
-	apiMW.POST("/rooms", handlers.AddNewRoom(s.storage))
+	apiMW.GET("/rooms", handlers.GetAllRooms(storage))
+	apiMW.GET("/rooms/:roomid", handlers.GetRoomByRoomID(storage))
+	apiMW.POST("/rooms", handlers.AddNewRoom(storage))
 
-	apiMW.GET("/roomtypes", handlers.GetAllRoomTypes(s.storage))
-	apiMW.POST("/roomtypes", handlers.AddNewRoomType(s.storage))
+	apiMW.GET("/roomtypes", handlers.GetAllRoomTypes(storage))
+	apiMW.POST("/roomtypes", handlers.AddNewRoomType(storage))
 
 	return &s
 }

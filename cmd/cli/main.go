@@ -11,10 +11,10 @@ import (
 )
 
 func main() {
-	rooms := make([]models.Room, 0)
+	rooms := make([]*models.Room, 0)
 
 	for i := 0; i < 3; i++ {
-		rooms = append(rooms, models.Room{
+		rooms = append(rooms, &models.Room{
 			ID:         strconv.Itoa(i + 1),
 			Name:       fmt.Sprintf("Foo Room - %v", strconv.Itoa(i+1)),
 			NickName:   fmt.Sprintf("Foo-NickName - %v", strconv.Itoa(i+1)),
@@ -24,12 +24,14 @@ func main() {
 		})
 	}
 
-	fmt.Printf("values: %+v\n\n", rooms)
+	for _, v := range rooms {
+		fmt.Printf("room: %+v\n\n", *v)
+	}
 
 	roomHelper := list.GetRoomsHelper(rooms)
-	filtered := roomHelper.Filter(func(room models.Room) bool {
+	filtered := roomHelper.Filter(func(room *models.Room) bool {
 		return room.ID == "1"
 	})
 
-	fmt.Printf("\n\nfiltered: %+v", filtered[0])
+	fmt.Printf("\n\nfiltered: %+v", *filtered[0])
 }

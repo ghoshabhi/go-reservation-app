@@ -4,8 +4,11 @@ import "goreservationapp/pkg/storage/models"
 
 // Storage interface defines the methods available to interact with the storage system
 type Storage interface {
+	// Room
 	AddNewRoom(newRoom *models.Room) error
 	GetAllRooms() ([]*models.Room, error)
+	GetRoomByRoomID(roomID string) (*models.Room, error)
+	// RoomType
 	AddNewRoomType(newRoomType *models.RoomType) error
 	GetAllRoomTypes() ([]*models.RoomType, error)
 }
